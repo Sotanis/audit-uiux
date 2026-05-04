@@ -113,7 +113,12 @@ echo "  1) Cursor"
 echo "  2) Claude Code"
 echo "  3) Ca hai"
 echo ""
-read -rp "Chon (1/2/3): " choice < /dev/tty
+if [[ -t 0 ]]; then
+  read -rp "Chon (1/2/3): " choice
+else
+  exec < /dev/tty
+  read -rp "Chon (1/2/3): " choice
+fi
 
 echo ""
 

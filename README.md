@@ -13,7 +13,7 @@ Hỗ trợ **Cursor** và **Claude Code**. Xem [GIOI-THIEU.md](GIOI-THIEU.md) đ
 Mở **Terminal**, chạy:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Sotanis/audit-uiux/main/install.sh | bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Sotanis/audit-uiux/main/install.sh)
 ```
 
 Script tự tải tất cả file từ GitHub → hỏi bạn dùng gì → copy vào đúng chỗ.
