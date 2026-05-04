@@ -146,6 +146,9 @@ Dùng `use_figma` (read-only) nếu cần inspect chi tiết mà `get_metadata` 
 
 **Quy tắc quan trọng**: Khi ghi nhận finding, luôn đặt trong bối cảnh JTBD — finding này cản trở job step nào? Ảnh hưởng user-story nào?
 
+**Chụp ảnh cho từng finding:**
+Mỗi khi phát hiện lỗi, xác định nodeId của vùng có vấn đề (từ metadata ở Step 2), rồi gọi `get_screenshot(fileKey, nodeId)` cho đúng node đó. Lưu thành `screenshot-FXXX.png`. Ảnh này phải chụp sát vùng lỗi (node chứa vấn đề), không phải ảnh toàn màn hình — để người đọc nhìn vào biết ngay lỗi ở đâu.
+
 ### Step 6: UX Behavioral Impact Analysis
 
 Với mỗi finding từ Step 5, phân tích sâu 3 tầng tác động:
@@ -204,7 +207,7 @@ Tạo báo cáo theo template từ [report-template.md](report-template.md).
 
 **Xuất báo cáo:**
 
-1. Tạo thư mục `audit-report-[tên-màn-hình]-[YYYY-MM-DD]/` chứa:
+1. Tạo thư mục `~/Downloads/audit-report-[tên-màn-hình]-[YYYY-MM-DD]/` chứa:
    - `bao-cao.md` — báo cáo markdown
    - `bao-cao.html` — báo cáo HTML (ảnh nhúng base64, xem được ngay trên trình duyệt)
    - `screenshot-overview.png`, `screenshot-FXXX.png` — ảnh gốc
