@@ -108,10 +108,48 @@ Số điểm `/100` hiển thị lớn:
 
 ```html
 <!-- Thay vì -->
-<img src="screenshot-F001.png" alt="...">
+<img src="screenshot-F-001.png" alt="...">
 
 <!-- Thành -->
 <img src="data:image/png;base64,iVBORw0KGgo..." alt="...">
 ```
 
 Nếu không đọc được file ảnh (lỗi hoặc không tồn tại), giữ nguyên `src` gốc và thêm ghi chú `<!-- ảnh không nhúng được -->`.
+
+### Bố cục ảnh trong finding (side-by-side khi có ảnh ngữ cảnh)
+
+Khi finding có cả ảnh vùng lỗi + ảnh ngữ cảnh, render dạng grid 2 cột:
+
+```html
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 1rem 0;">
+  <figure style="margin: 0;">
+    <img src="data:image/png;base64,..." alt="F-001 vùng lỗi" style="width: 100%; border: 2px solid #e74c3c; border-radius: 6px;">
+    <figcaption style="font-size: 0.85rem; color: #666; margin-top: 4px;">Vùng có vấn đề</figcaption>
+  </figure>
+  <figure style="margin: 0;">
+    <img src="data:image/png;base64,..." alt="F-001 ngữ cảnh" style="width: 100%; border: 1px solid #ddd; border-radius: 6px;">
+    <figcaption style="font-size: 0.85rem; color: #666; margin-top: 4px;">Ngữ cảnh xung quanh</figcaption>
+  </figure>
+</div>
+```
+
+Khi chỉ có 1 ảnh (vùng lỗi đủ rõ), render full-width như bình thường:
+
+```html
+<figure style="margin: 1rem 0;">
+  <img src="data:image/png;base64,..." alt="F-001" style="max-width: 100%; border: 2px solid #e74c3c; border-radius: 6px;">
+  <figcaption style="font-size: 0.85rem; color: #666; margin-top: 4px;">F-001 — [mô tả ngắn]</figcaption>
+</figure>
+```
+
+**Quy tắc viền màu theo severity:**
+- 🔴 P0: `border: 2px solid #e74c3c`
+- 🟡 P1: `border: 2px solid #e67e22`
+- 🟢 P2: `border: 1px solid #ddd`
+
+### Validation trước khi xuất HTML
+
+Trước khi tạo file `bao-cao.html`, kiểm:
+1. Mọi finding 🔴/🟡 trong `bao-cao.md` có ít nhất 1 thẻ `![...](screenshot-F-XXX.png)` không?
+2. File ảnh tương ứng có tồn tại trong thư mục báo cáo không?
+3. Nếu thiếu → chụp lại từ Figma (nodeId vẫn còn trong scratchpad), không skip.
