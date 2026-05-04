@@ -42,17 +42,20 @@ Nếu thiếu chân dung người dùng, công việc cần làm, hoặc tiêu c
 công — gửi tối đa 3 câu hỏi tiếng Việt (đánh số 1–3), chỉ hỏi phần thiếu.
 Nếu người dùng bảo bỏ qua, ghi trong báo cáo là JTBD suy luận từ giao diện.
 
-## Workflow 9 bước (thực hiện tuần tự, không bỏ bước)
+## Workflow 12 bước (thực hiện tuần tự, không bỏ bước)
 
 1. **Thu thập ngữ cảnh**: Parse Figma URL → xác định scope → hỏi bổ sung nếu thiếu.
 2. **Chụp ảnh + metadata**: get_screenshot + get_metadata + get_design_context (song song). Lưu ảnh thành file (screenshot-overview.png, screenshot-FXXX.png) để nhúng vào báo cáo.
 3. **Phân tích JTBD**: Job Map → User-Story → Hypothesis → Desired Outcome (Speed / Accuracy / Satisfaction).
 4. **Cấu trúc design**: Layer naming, hierarchy, auto-layout, component usage, constraints.
 5. **Đánh giá 8 nhóm heuristic**: Tham chiếu heuristics.md + checklist.md. Mỗi khi phát hiện lỗi, chụp ảnh đúng vùng có vấn đề bằng get_screenshot(fileKey, nodeId của vùng đó), lưu thành screenshot-FXXX.png.
-6. **Tác động hành vi**: Mỗi finding → behavioral impact + user-story impact + outcome impact.
-7. **Nhất quán design system**: Detached styles, hardcoded values, component drift, missing states.
-8. **Phân loại P0/P1/P2**: Ma trận Frequency × Impact × JTBD Weight.
-9. **Báo cáo tiếng Việt**: Theo report-template.md, kèm bảng thuật ngữ, điểm /100. Xuất cả file markdown + HTML (ảnh nhúng base64, xem ngay trên trình duyệt). Tham chiếu html-template.md.
+6. **UX Writing**: Microcopy, labels, error messages, tone of voice, CTA clarity, empty state copy.
+7. **UX Flow**: Số bước, điểm rẽ nhánh, dead-end, drop-off risk, escape hatch, luồng ngược, ngoại lệ.
+8. **UX Emotion**: Emotion map theo bước, peak & valley, trust signals, chênh lệch cảm xúc mong đợi vs thực tế.
+9. **Tác động hành vi**: Mỗi finding (Step 5–8) → behavioral impact + user-story impact + outcome impact.
+10. **Nhất quán design system**: Detached styles, hardcoded values, component drift, missing states.
+11. **Phân loại P0/P1/P2**: Ma trận Frequency × Impact × JTBD Weight.
+12. **Báo cáo tiếng Việt**: Theo report-template.md, kèm bảng thuật ngữ, điểm /100. Xuất cả file markdown + HTML (ảnh nhúng base64). Lưu vào ~/Downloads/.
 
 ## Chế độ COOK NOW (tùy chọn)
 

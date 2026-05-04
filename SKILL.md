@@ -71,7 +71,7 @@ Giảm gap **JTBD suy luận sai**, giảm báo cáo **thiếu tiêu chí thành
 
 ## Required Workflow
 
-**Thực hiện tuần tự 9 bước. Không bỏ bước.**
+**Thực hiện tuần tự 12 bước. Không bỏ bước.**
 
 ### Step 1: Thu thập context
 
@@ -149,9 +149,100 @@ Dùng `use_figma` (read-only) nếu cần inspect chi tiết mà `get_metadata` 
 **Chụp ảnh cho từng finding:**
 Mỗi khi phát hiện lỗi, xác định nodeId của vùng có vấn đề (từ metadata ở Step 2), rồi gọi `get_screenshot(fileKey, nodeId)` cho đúng node đó. Lưu thành `screenshot-FXXX.png`. Ảnh này phải chụp sát vùng lỗi (node chứa vấn đề), không phải ảnh toàn màn hình — để người đọc nhìn vào biết ngay lỗi ở đâu.
 
-### Step 6: UX Behavioral Impact Analysis
+### Step 6: UX Writing Analysis
 
-Với mỗi finding từ Step 5, phân tích sâu 3 tầng tác động:
+Phân tích chất lượng nội dung chữ trên màn hình/luồng. Dùng dữ liệu text từ `get_design_context` và `get_metadata`.
+
+1. **Microcopy & Labels**:
+   - Label có rõ nghĩa, đúng hành động không? (VD: "Gửi" vs "Gửi yêu cầu" vs "Submit")
+   - Placeholder có giúp user hiểu cần nhập gì không?
+   - Tooltip / helper text có đủ và đúng ngữ cảnh không?
+
+2. **Error Messages**:
+   - Thông báo lỗi có nói rõ **lỗi gì** + **cách sửa** không?
+   - Tránh thông báo chung chung ("Đã xảy ra lỗi") hoặc mã kỹ thuật ("Error 500")
+   - Giọng văn có thân thiện, không đổ lỗi cho user không?
+
+3. **Tone of Voice**:
+   - Nhất quán giọng văn xuyên suốt (trang trọng / thân thiện / trung tính)?
+   - Phù hợp với chân dung người dùng và bối cảnh sử dụng?
+   - Có chỗ nào dùng thuật ngữ kỹ thuật mà user không hiểu?
+
+4. **Empty State & Onboarding Copy**:
+   - Trạng thái trống có hướng dẫn user làm gì tiếp không?
+   - Copy có tạo động lực hành động (actionable) không?
+
+5. **CTA Clarity**:
+   - Nút hành động có nói rõ sẽ xảy ra gì khi nhấn không?
+   - Phân biệt được hành động chính / phụ qua ngôn ngữ?
+
+Mỗi vấn đề về UX Writing tạo finding riêng, gắn mã F-XXX, chụp ảnh vùng có vấn đề.
+
+### Step 7: UX Flow Analysis
+
+Phân tích luồng trải nghiệm tổng thể. Nếu scope là luồng nhiều màn, đánh giá toàn bộ; nếu scope là 1 màn, đánh giá luồng nội bộ trong màn đó.
+
+1. **Số bước hoàn thành**:
+   - Đếm số bước để hoàn thành job chính
+   - So sánh với mức hợp lý (có bước nào thừa / gộp được không?)
+   - Áp dụng nguyên tắc: càng ít bước càng tốt, nhưng mỗi bước phải rõ ràng
+
+2. **Điểm rẽ nhánh (Decision Points)**:
+   - Có bao nhiêu chỗ user phải chọn / quyết định?
+   - Mỗi điểm rẽ có đủ thông tin để quyết định không?
+   - Có nhánh nào dẫn đến dead-end (bế tắc) không?
+
+3. **Drop-off Risk**:
+   - Bước nào user dễ bỏ dở nhất? (form dài, chờ lâu, yêu cầu thông tin nhạy cảm)
+   - Có cơ chế lưu tiến trình / quay lại không?
+   - Có thoát khẩn cấp (escape hatch) ở mỗi bước không?
+
+4. **Luồng ngược (Back Flow)**:
+   - User có thể quay lại bước trước để sửa không?
+   - Dữ liệu đã nhập có được giữ lại khi quay lại không?
+
+5. **Luồng ngoại lệ**:
+   - Lỗi mạng / timeout: có xử lý không?
+   - Input không hợp lệ: validate inline hay chờ cuối?
+   - Hết phiên đăng nhập giữa chừng: có cảnh báo / recovery không?
+
+Tạo finding cho mỗi vấn đề về flow, gắn mã F-XXX.
+
+### Step 8: UX Emotion Mapping
+
+Ánh xạ cảm xúc người dùng qua từng bước trong luồng. Phân tích dựa trên thiết kế (visual cues, copy, flow structure) — không phải dữ liệu người dùng thật.
+
+1. **Emotion Map**: Với mỗi bước công việc từ Step 3 (Job Map), đánh giá cảm xúc chủ đạo:
+
+| Cảm xúc | Dấu hiệu trên thiết kế |
+|----------|------------------------|
+| **Tin tưởng (Trust)** | Logo uy tín, chính sách rõ, biểu tượng bảo mật, social proof |
+| **Lo lắng (Anxiety)** | Yêu cầu thông tin nhạy cảm, hành động không thể hoàn tác, thiếu giải thích |
+| **Vui / Hài lòng (Delight)** | Phản hồi thành công rõ ràng, animation vui, tiến trình hiển thị, reward |
+| **Bực bội (Frustration)** | Form dài, lỗi không rõ, phải nhập lại, chờ không biết bao lâu |
+| **Bối rối (Confusion)** | Quá nhiều lựa chọn, thuật ngữ lạ, không biết bước tiếp |
+| **An tâm (Reassurance)** | Xác nhận rõ, tóm tắt trước khi gửi, cho phép sửa |
+
+2. **Emotion Journey**: Tạo bảng ánh xạ cảm xúc theo bước:
+
+| Bước | Cảm xúc dự kiến | Cảm xúc thực tế (từ thiết kế) | Chênh lệch |
+|------|-----------------|-------------------------------|------------|
+| [Bước] | [Mong đợi user cảm thấy gì] | [Thiết kế thực tế gợi cảm xúc gì] | [Tích cực / Tiêu cực / Phù hợp] |
+
+3. **Điểm đỉnh & điểm đáy (Peak & Valley)**:
+   - Điểm đỉnh: bước nào thiết kế tạo trải nghiệm tích cực nhất? Có đủ mạnh không?
+   - Điểm đáy: bước nào gây cảm xúc tiêu cực nhất? Có cách giảm nhẹ không?
+   - Áp dụng Peak-End Rule: cảm xúc ở bước cuối cùng ảnh hưởng lớn đến trải nghiệm tổng thể
+
+4. **Trust Signals**:
+   - Có đủ dấu hiệu tin cậy tại các bước nhạy cảm (thanh toán, nhập thông tin cá nhân)?
+   - Thiếu trust signal nào quan trọng?
+
+Tạo finding cho mỗi chênh lệch cảm xúc tiêu cực, gắn mã F-XXX.
+
+### Step 9: UX Behavioral Impact Analysis
+
+Với mỗi finding từ Step 5–8, phân tích sâu 3 tầng tác động:
 
 1. **Behavioral Impact**: Finding thay đổi/cản trở hành vi sử dụng như thế nào?
    - Tăng cognitive load?
@@ -169,7 +260,7 @@ Với mỗi finding từ Step 5, phân tích sâu 3 tầng tác động:
    - **Accuracy** giảm: dễ nhầm, dễ bỏ sót, undo nhiều
    - **Satisfaction** giảm: frustration, confusion, thiếu tin tưởng
 
-### Step 7: Design System consistency
+### Step 10: Design System consistency
 
 Dùng `search_design_system` + `get_design_context` để kiểm tra:
 
@@ -179,7 +270,7 @@ Dùng `search_design_system` + `get_design_context` để kiểm tra:
 4. **Missing states**: Component thiếu hover, disabled, error states.
 5. **Variable usage**: Có bind variables cho color, spacing không? Multi-mode (Light/Dark) support?
 
-### Step 8: Severity classification
+### Step 11: Severity classification
 
 Phân loại theo ma trận Frequency × Impact, tính thêm JTBD weight:
 
@@ -194,7 +285,7 @@ Quy tắc nâng severity:
 - Finding khiến user không thể hoàn thành outcome → nâng P0 bất kể frequency.
 - Finding ảnh hưởng accessibility (WCAG A/AA fail) → nâng ít nhất P1.
 
-### Step 9: Tạo báo cáo audit
+### Step 12: Tạo báo cáo audit
 
 Tạo báo cáo theo template từ [report-template.md](report-template.md).
 
@@ -229,7 +320,7 @@ Chế độ này dùng khi user muốn: **biến phần “đề xuất hành đ
 - Token/MCP phải có quyền **edit** file.
 - Trước mọi thao tác chỉnh sửa bằng `use_figma`, **bắt buộc** phải nạp skill [figma-use](../figma-use/SKILL.md) (quy tắc môi trường).
 
-### Workflow COOK NOW (thực hiện sau Step 9)
+### Workflow COOK NOW (thực hiện sau Step 12)
 
 1. **Tạo “Checklist áp dụng”** trong phần khuyến nghị:
    - Mỗi mục có mã: `A-001`, `A-002`, ...
