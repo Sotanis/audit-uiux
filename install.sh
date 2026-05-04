@@ -10,6 +10,7 @@ AGENT_FILES=(
   jtbd-framework.md
   checklist.md
   report-template.md
+  html-template.md
   PHAM-VI-TIEU-CHI-VA-THAM-CHIEU.md
 )
 
@@ -54,6 +55,7 @@ KB_FILES=(
   jtbd-framework.md
   checklist.md
   report-template.md
+  html-template.md
   PHAM-VI-TIEU-CHI-VA-THAM-CHIEU.md
 )
 

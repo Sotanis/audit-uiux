@@ -91,6 +91,11 @@ Thu thập dữ liệu từ Figma song song:
 2. `get_metadata(fileKey, nodeId)` — layer structure, hierarchy, positions, sizes.
 3. `get_design_context(fileKey, nodeId)` — tokens, styles, component references, variables.
 
+**Lưu ảnh chụp để nhúng vào báo cáo:**
+- Dùng `get_screenshot` cho toàn bộ screen (ảnh tổng quan) và cho từng vùng có finding (ảnh chi tiết).
+- Lưu ảnh vào thư mục cùng cấp với file báo cáo, đặt tên theo mã finding: `screenshot-overview.png`, `screenshot-F001.png`, `screenshot-F002.png`, ...
+- Nhúng vào báo cáo bằng cú pháp markdown: `![Mô tả](screenshot-F001.png)`
+
 Nếu design quá lớn (get_design_context bị truncate), dùng `get_metadata` để lấy child node IDs rồi fetch từng phần.
 
 ### Step 3: JTBD Analysis
@@ -197,6 +202,20 @@ Tạo báo cáo theo template từ [report-template.md](report-template.md).
 - Sắp xếp findings theo severity: P0 → P1 → P2.
 - Tổng điểm audit /100 dựa trên: Structure (20), Visual (20), Interaction (20), JTBD Alignment (20), Design System (20).
 
+**Xuất báo cáo:**
+
+1. Tạo thư mục `audit-report-[tên-màn-hình]-[YYYY-MM-DD]/` chứa:
+   - `bao-cao.md` — báo cáo markdown
+   - `bao-cao.html` — báo cáo HTML (ảnh nhúng base64, xem được ngay trên trình duyệt)
+   - `screenshot-overview.png`, `screenshot-FXXX.png` — ảnh gốc
+
+2. File HTML được tạo bằng cách:
+   - Chuyển markdown sang HTML
+   - Đọc từng file ảnh, encode base64, thay thế `src="screenshot-*.png"` thành `src="data:image/png;base64,..."`
+   - Bọc trong template HTML có CSS đẹp, responsive, hỗ trợ in ấn
+
+3. Ưu tiên giao file HTML khi user cần chia sẻ — 1 file duy nhất, mở trên mọi trình duyệt, không cần gửi kèm ảnh.
+
 ## Chế độ COOK NOW (tùy chọn) — checklist → bạn chọn → agent sửa trên Figma
 
 Chế độ này dùng khi user muốn: **biến phần “đề xuất hành động” thành checklist có mô tả sửa**, sau đó user **chọn** các mục cần làm và xác nhận **COOK NOW**, rồi agent **thực hiện chỉnh sửa trên Figma**.
@@ -302,3 +321,4 @@ Khi một trong các giới hạn trên áp dụng, agent nên **nói thẳng** 
 - JTBD framework cho audit: [jtbd-framework.md](jtbd-framework.md)
 - Checklist hand-off readiness: [checklist.md](checklist.md)
 - Template báo cáo: [report-template.md](report-template.md)
+- Hướng dẫn xuất HTML: [html-template.md](html-template.md)
