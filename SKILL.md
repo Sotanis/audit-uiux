@@ -35,6 +35,7 @@ Skill thực hiện UI/UX audit cho thiết kế Figma trước khi hand-off cho
 - Figma MCP server phải connected và accessible.
 - User cung cấp Figma URL dạng: `https://figma.com/design/:fileKey/:fileName?node-id=1-2`
 - Các tool cần thiết: `get_design_context`, `get_screenshot`, `get_metadata`, `search_design_system`.
+- Trước khi **chốt quyết định bàn giao** (READY / BLOCKED): đọc [gate-rules.md](gate-rules.md) — Hard Gate H1–H11, Score 4 trục, Severity P0.
 
 ## Cơ chế hỏi bổ sung (3 câu tối thiểu)
 
@@ -294,7 +295,12 @@ Tạo báo cáo theo template từ [report-template.md](report-template.md).
 - Mỗi finding phải có: evidence (screenshot), user-story liên quan, hypothesis tham chiếu, phân tích behavioral impact, đề xuất khắc phục.
 - Đề xuất khắc phục phải liên kết với việc khôi phục outcome cho user.
 - Sắp xếp findings theo severity: P0 → P1 → P2.
-- Tổng điểm audit /100 dựa trên: Structure (20), Visual (20), Interaction (20), JTBD Alignment (20), Design System (20).
+
+**Quyết định bàn giao (chuẩn chính):** Áp dụng [gate-rules.md](gate-rules.md): **Tầng 1** Hard Gate H1–H11; **Tầng 2** Score Gate — mỗi trục UI / UX / Nghiệp vụ / Use-case ≥80%, quyết định tổng = `MIN(% 4 trục)`; **Tầng 3** Severity — P0 mở có thể BLOCKED. Xuất khối `HAND-OFF DECISION` như trong [report-template.md](report-template.md).
+
+**Điểm /100 (bổ sung, không thay gate):** Có thể tính thêm theo [checklist.md](checklist.md) (bốn trụ A–D × 25 điểm) để **tóm tắt chất lượng** hand-off readiness. Nếu mâu thuẫn với gate (ví dụ điểm cao nhưng Hard Gate fail) → **ưu tiên gate-rules**.
+
+**Anti-hallucination (định lượng H1–H11):** Chỉ ghi **phần trăm đạt** và **danh sách node vi phạm cụ thể** khi đã đếm/quét được bằng `use_figma` hoặc phân tích metadata có hệ thống. Nếu chỉ suy luận từ ảnh/context → ghi **`[ước lượng]`** hoặc **`[inferred ±X%]`** theo [gate-rules.md](gate-rules.md), **không** bịa số node hoặc % chính xác giả.
 
 **Xuất báo cáo:**
 
@@ -411,6 +417,7 @@ Khi một trong các giới hạn trên áp dụng, agent nên **nói thẳng** 
 
 ## Reference Files
 
+- Quy tắc gate bàn giao: [gate-rules.md](gate-rules.md)
 - Bộ tiêu chuẩn heuristic: [heuristics.md](heuristics.md)
 - JTBD framework cho audit: [jtbd-framework.md](jtbd-framework.md)
 - Checklist hand-off readiness: [checklist.md](checklist.md)

@@ -1,6 +1,6 @@
 # Template Báo cáo Audit UI/UX
 
-Sử dụng template dưới đây khi tạo báo cáo ở Bước 9. Viết bằng tiếng Việt. Chỉ giữ nguyên tiếng Anh với thuật ngữ chuyên dụng (xem Bảng thuật ngữ cuối template). Thay thế tất cả `[placeholder]` bằng nội dung thực tế.
+Sử dụng template dưới đây khi tạo báo cáo ở Bước 12. Viết bằng tiếng Việt. Chỉ giữ nguyên tiếng Anh với thuật ngữ chuyên dụng (xem Bảng thuật ngữ cuối template). Thay thế tất cả `[placeholder]` bằng nội dung thực tế.
 
 ---
 
@@ -40,6 +40,19 @@ HAND-OFF DECISION: [READY / READY WITH NOTES / NEEDS REWORK / BLOCKED]
 ```
 
 > Tham chiếu công thức: [gate-rules.md](gate-rules.md)
+
+---
+
+## Giới hạn định lượng và phương pháp
+
+Báo cáo này được tạo bởi agent AI đọc Figma qua MCP — **không thay thế** kiểm thử WCAG trên bản build, không có usability test người thật, không có analytics hành vi.
+
+| Nội dung | Giới hạn |
+|----------|-----------|
+| **Hard Gate H1–H11 (% đạt, danh sách node)** | Chỉ tin cậy tuyệt đối khi đã đếm bằng script/`use_figma` có hệ thống. Nếu ghi `[ước lượng]` / `[inferred]` → là **suy luận**, cần xác minh bằng plugin/công cụ chuyên dụng trước khi kết luận pháp lý hoặc compliance. |
+| **Score 4 trục** | Nhiều item trong [gate-rules.md](gate-rules.md) có method `inferred` — mang sai số ±10–15% theo tài liệu gate. |
+| **Emotion / Peak-End / JTBD** | Suy diễn từ thiết kế tĩnh và brief; không phải kết quả nghiên cứu người dùng. |
+| **Tần suất × Impact** | Tần suất thường là **giả định** nếu không có dữ liệu sản phẩm trong prompt. |
 
 ---
 

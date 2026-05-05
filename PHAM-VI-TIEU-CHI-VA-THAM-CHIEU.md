@@ -59,11 +59,13 @@ Công cụ cụ thể phụ thuộc máy chủ MCP bạn cài; danh mục đầy
 
 | File | Vai trò |
 |------|---------|
-| [SKILL.md](SKILL.md) | Quy trình 9 bước, hỏi bổ sung 3 câu, ranh giới skill, giới hạn đã biết |
+| [gate-rules.md](gate-rules.md) | Gate bàn giao: Hard H1–H11, Score 4 trục, quyết định READY/BLOCKED |
+| [SKILL.md](SKILL.md) | Quy trình 12 bước, hỏi bổ sung 3 câu, ranh giới skill, giới hạn đã biết |
 | [heuristics.md](heuristics.md) | Tám nhóm tiêu chí đánh giá + ví dụ đạt / không đạt |
 | [jtbd-framework.md](jtbd-framework.md) | Bản đồ công việc, mẫu câu chuyện người dùng, giả thuyết, ánh xạ bước → loại vấn đề UX |
 | [checklist.md](checklist.md) | Checklist bàn giao: Cấu trúc / Hình ảnh / Tương tác / Phù hợp JTBD + thang điểm 25×4 |
-| [report-template.md](report-template.md) | Khung báo cáo tiếng Việt, bảng thuật ngữ |
+| [report-template.md](report-template.md) | Khung báo cáo tiếng Việt, bảng thuật ngữ, gate decision |
+| [html-template.md](html-template.md) | Hướng dẫn xuất HTML (ảnh base64) |
 
 ### 2.3 Nguồn từ người dùng (prompt)
 

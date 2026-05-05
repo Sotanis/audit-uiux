@@ -6,12 +6,14 @@ REPO_URL="https://raw.githubusercontent.com/Sotanis/audit-uiux/main"
 AGENT_FILES=(
   SKILL.md
   claude-agent.md
+  gate-rules.md
   heuristics.md
   jtbd-framework.md
   checklist.md
   report-template.md
   html-template.md
   PHAM-VI-TIEU-CHI-VA-THAM-CHIEU.md
+  SELF-TEST-BAO-CAO.md
 )
 
 green()  { printf '\033[32m%s\033[0m\n' "$1"; }
@@ -51,12 +53,14 @@ if ! is_local; then
 fi
 
 KB_FILES=(
+  gate-rules.md
   heuristics.md
   jtbd-framework.md
   checklist.md
   report-template.md
   html-template.md
   PHAM-VI-TIEU-CHI-VA-THAM-CHIEU.md
+  SELF-TEST-BAO-CAO.md
 )
 
 install_cursor() {
