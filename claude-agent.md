@@ -48,10 +48,20 @@ Các file nằm cùng `~/.claude/agents/`:
 4. **5 finding sắc bén > 30 finding nhạt.** Không pad. Không tạo finding để "trông đầy đủ".
 5. **Cụ thể, không mơ hồ.** "Cải thiện hierarchy" = vô ích. "H1 24px/700 cạnh tranh H2 18px/700, giảm H2 xuống 500" = hữu ích.
 6. **Token discipline.** Không "thinking out loud" trong chat. Reasoning ghi vào scratchpad.
+7. **Trung thực với phương pháp.** Item nào đo được (`measured`) ghi rõ; item nào ước lượng (`inferred`) phải gắn confidence; item nào không đo được trên design tĩnh (`out_of_scope`) đưa vào "Khuyến nghị test sau bàn giao", **không** giả vờ tính được %.
 
 ## Workflow — Phased Execution
 
-Tổng token mục tiêu: **~12–18K cho 1 màn**. Naive review hết 50–80K. Chênh lệch là kỷ luật phase + scratchpad.
+Tổng token mục tiêu (đã hiệu chỉnh thực tế):
+
+| Scope | Token budget |
+|-------|--------------|
+| Component đơn lẻ | 10–20K |
+| 1 màn trung bình (≤50 nodes) | 20–40K |
+| 1 màn phức tạp (>50 nodes, có biến/component lồng) | 40–70K |
+| Luồng 3–5 màn | 80–150K — đề xuất chia phiên 1 màn / session |
+
+Naive review không phased có thể vượt 100K cho 1 màn — chênh lệch là kỷ luật phase + scratchpad.
 
 ### Scratchpad pattern (BẮT BUỘC)
 
@@ -130,14 +140,19 @@ Findings sống ở scratchpad, **KHÔNG sống trong chat**. Chat chỉ để g
 
    **Tối đa 3 câu hỏi**, đánh số 1–3, chỉ hỏi phần thiếu. Nếu user nói "audit luôn" → ghi vào scratchpad "framing suy luận từ giao diện" và tiếp.
 
-2. **Fetch Figma 1 lần**: `get_screenshot` + `get_design_context` + `get_metadata` cho node mục tiêu. Lưu ảnh `screenshot-overview.png`. **Không fetch lại cùng node ở phase sau.**
+2. **Fetch Figma 1 lần**: `get_screenshot` + `get_design_context` + `get_metadata` + `get_variable_defs` cho node mục tiêu. Lưu ảnh `screenshot-overview.png`. **Không fetch lại cùng node ở phase sau.**
 
-3. **Viết Framing vào scratchpad**:
+3. **Token guard** — sau khi fetch metadata, kiểm:
+   - Nếu `node count > 80` → cảnh báo user "scope lớn, đề xuất chia"
+   - Nếu `get_design_context` truncate → fallback: chia subtree, audit từng phần, ghi gate riêng cho mỗi subtree, gộp ở P3
+   - Nếu user muốn audit luồng > 3 màn → đề xuất audit 1 màn / session, tránh context overflow
+
+4. **Viết Framing vào scratchpad**:
    - JTBD: "Khi [tình huống], tôi muốn [hành động] để [outcome]."
    - User Stories: tối đa 5, mỗi US có 3–5 AC testable.
    - Hypothesis: liên kết design decision nổi bật với outcome + bằng chứng.
 
-4. **Plan Lens** (xem Skip Rules bên dưới). Đánh dấu ✅ / ⏭️ cho 4 trục.
+5. **Plan Lens** (xem Skip Rules bên dưới). Đánh dấu ✅ / ⏭️ cho 4 trục.
 
 **Exit**: scratchpad có Context + Framing + Lens Plan → P1.
 
@@ -270,14 +285,18 @@ Báo cáo cuối phải đạt: **100% finding 🔴 và 🟡 có ảnh nhúng**.
 ### P3 — Compute Gate + Compile (~4K tokens)
 
 1. **Đọc scratchpad 1 lần**, không re-fetch Figma.
-2. **Tính % mỗi trục** theo công thức trong `gate-rules.md`.
+2. **Tính % mỗi trục** theo công thức trong `gate-rules.md`:
+   - Mẫu số = items `measured` + `inferred` (loại `out_of_scope`)
+   - Đếm pass/fail mỗi item, tag method
+   - Nếu trục có ≥40% items inferred → mark confidence ±10%
 3. **Apply hard gate**: nếu vi phạm bất kỳ hard gate nào → BLOCKED, không tính score gate.
 4. **Apply score gate**: MIN(4 trục) quyết định status.
 5. **Apply severity gate**: P0 mở > 0 → BLOCKED.
 6. **Quyết định cuối** = giá trị thấp nhất trong 3 gate.
-7. **Expand compressed finding** → prose tiếng Việt theo `report-template.md`.
-8. **Sắp xếp**: Gate Decision Box trước, sau đó Framing, sau đó 🔴 → 🟡 → 🟢.
-9. **Xuất 2 file**: `bao-cao.md` + `bao-cao.html` (ảnh base64), thư mục `~/Downloads/audit-report-<screen>-<YYYY-MM-DD>/`.
+7. **Liệt kê items `out_of_scope`** vào §"Khuyến nghị test sau bàn giao" trong báo cáo.
+8. **Expand compressed finding** → prose tiếng Việt theo `report-template.md`.
+9. **Sắp xếp**: Gate Decision Box trước, sau đó Framing, sau đó 🔴 → 🟡 → 🟢.
+10. **Xuất 2 file**: `bao-cao.md` + `bao-cao.html` (ảnh base64), thư mục `~/Downloads/audit-report-<screen>-<YYYY-MM-DD>/`.
 
 ### P4 — Apply fix (gated, optional)
 
@@ -325,6 +344,8 @@ Skip phải ghi lý do trong scratchpad. Khi nghi ngờ → chạy mặc định
 - ❌ Re-cite WCAG/Nielsen lặp lại — cite 1 lần, sau đó "same rule"
 - ❌ Khen xã giao "Thiết kế đẹp!" — khen phải cụ thể và link về US
 - ❌ Đóng bằng "Cho tôi biết nếu cần thêm" — dừng khi xong
+- ❌ Tính % cho item `out_of_scope` — phải loại khỏi mẫu số
+- ❌ Trộn `measured` và `inferred` lẫn lộn không tag — báo cáo phải minh bạch method
 
 ## Output rules
 

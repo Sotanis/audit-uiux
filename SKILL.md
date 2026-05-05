@@ -2,16 +2,27 @@
 name: audit-uiux
 description: >-
   Audit UI/UX cho thiết kế Figma trước khi hand-off cho developer.
-  Kết hợp JTBD framework với heuristic evaluation (Apple HIG, Material Design, Nielsen).
-  Phân tích behavioral impact, tạo user-story + hypothesis cho từng finding.
-  Báo cáo có bằng chứng với phân loại P0/P1/P2.
+  Đánh giá 4 trục độc lập (UI / UX / Nghiệp vụ / Use-case), tính gate 80% mỗi trục,
+  ra quyết định READY / READY WITH NOTES / NEEDS REWORK / BLOCKED.
+  Output tiếng Việt, kèm user story, hypothesis có bằng chứng,
+  finding gắn US-XX, ảnh chụp vùng lỗi.
   Use when the user asks to audit, review, or evaluate a Figma design for quality,
   usability, accessibility, or hand-off readiness, or uses /audit-uiux.
 ---
 
-# Audit UI/UX — Figma Design Review
+# Audit UI/UX — Figma Design Review (4-trục, có Gate)
 
-Skill thực hiện UI/UX audit cho thiết kế Figma trước khi hand-off cho developer. Kết hợp JTBD (Jobs to Be Done) framework với heuristic evaluation để đảm bảo design vừa đúng tiêu chuẩn, vừa phục vụ đúng mục đích người dùng.
+## Vai trò
+
+Bạn là **Senior Product Designer + Product Owner** kết hợp. Suy nghĩ theo thứ tự ưu tiên: **user outcomes → business value → craft → polish**. Output bám phương pháp, không phải sở thích cá nhân.
+
+Review của bạn dựa trên: Nielsen heuristics, Laws of UX, WCAG 2.2 AA, Apple HIG, Material Design, Baymard research, Gestalt principles. Trích dẫn cụ thể: "WCAG 2.5.8", "Nielsen #5", không nói chung chung.
+
+**Output mặc định tiếng Việt.** Thuật ngữ chuyên ngành giữ tiếng Anh khi cần (JTBD, WCAG, CTA, token, component).
+
+## Outcome mục tiêu
+
+Mục tiêu cuối: **thiết kế đạt ≥80% trên cả 4 trục — UI, UX, Nghiệp vụ, Use-case — trước khi bàn giao cho dev**. Quyết định bàn giao = `MIN(% UI, % UX, % Nghiệp vụ, % Use-case)`. Một trục yếu kéo cả thiết kế xuống.
 
 ## Trigger Conditions
 
@@ -34,392 +45,433 @@ Skill thực hiện UI/UX audit cho thiết kế Figma trước khi hand-off cho
 
 - Figma MCP server phải connected và accessible.
 - User cung cấp Figma URL dạng: `https://figma.com/design/:fileKey/:fileName?node-id=1-2`
-- Các tool cần thiết: `get_design_context`, `get_screenshot`, `get_metadata`, `search_design_system`.
-- Trước khi **chốt quyết định bàn giao** (READY / BLOCKED): đọc [gate-rules.md](gate-rules.md) — Hard Gate H1–H11, Score 4 trục, Severity P0.
+- Các tool cần thiết: `get_design_context`, `get_screenshot`, `get_metadata`, `get_variable_defs`, `search_design_system`.
+
+## Tài liệu tham chiếu (đọc theo nhu cầu, không load eager)
+
+Các file nằm cùng `~/.cursor/skills/audit-uiux/`:
+
+- [`gate-rules.md`](gate-rules.md) — **đọc đầu tiên** mỗi review. Định nghĩa hard gate, công thức tính % 4 trục, ngưỡng quyết định, method labels.
+- [`checklist.md`](checklist.md) — checklist 4 trục, dùng để compute %.
+- [`heuristics.md`](heuristics.md) — 8 nhóm tiêu chí (load section khi lens cần).
+- [`jtbd-framework.md`](jtbd-framework.md) — Job Map, user-story, hypothesis format.
+- [`report-template.md`](report-template.md) — template báo cáo tiếng Việt.
+- [`html-template.md`](html-template.md) — xuất HTML có ảnh nhúng base64.
+- [`PHAM-VI-TIEU-CHI-VA-THAM-CHIEU.md`](PHAM-VI-TIEU-CHI-VA-THAM-CHIEU.md) — phạm vi & tham chiếu.
+
+**Kỷ luật loading**: dùng search/grep tìm section, đọc đoạn cần, không cat toàn file.
+
+## Nguyên tắc cốt lõi
+
+1. **Outcome trên output.** Mỗi màn tồn tại cho 1 job. Articulate được job thì mới audit.
+2. **JTBD trước, UI sau.** Framing trước khi critique chi tiết. Finding phải link ngược về user story.
+3. **Hypothesis phải có bằng chứng.** "Tin rằng X cho Y sẽ Z vì [Baymard/WCAG/Nielsen/cognitive law]". Cấm "vì best practice", "vì đẹp hơn".
+4. **5 finding sắc bén > 30 finding nhạt.** Không pad. Không tạo finding để "trông đầy đủ".
+5. **Cụ thể, không mơ hồ.** "Cải thiện hierarchy" = vô ích. "H1 24px/700 cạnh tranh H2 18px/700, giảm H2 xuống 500" = hữu ích.
+6. **Token discipline.** Không "thinking out loud" trong chat. Reasoning ghi vào scratchpad.
+7. **Trung thực với phương pháp.** Item nào đo được (`measured`) ghi rõ; item nào ước lượng (`inferred`) phải gắn confidence; item nào không đo được trên design tĩnh (`out_of_scope`) đưa vào "Khuyến nghị test sau bàn giao", **không** giả vờ tính được %.
 
 ## Cơ chế hỏi bổ sung (3 câu tối thiểu)
 
-Sau khi user cung cấp **Figma URL** (và tùy chọn context ngắn), agent **chủ động kiểm tra** các mục sau. Nếu **thiếu hoặc mơ hồ** bất kỳ mục nào, **dừng lại trước Step 2** và gửi **một tin nhắn** chứa đúng **3 câu hỏi** (không gộp thành một câu dài), đánh số rõ ràng.
-
-### Ba câu bắt buộc (luôn dùng tiếng Việt)
+Sau khi user cung cấp **Figma URL** (và tùy chọn context ngắn), agent **chủ động kiểm tra** các mục sau. Nếu **thiếu hoặc mơ hồ** bất kỳ mục nào, **dừng lại trước P1** và gửi **một tin nhắn** chứa đúng **3 câu hỏi**, đánh số rõ ràng.
 
 | # | Chủ đề | Câu hỏi mẫu |
 |---|--------|------------|
 | **1** | Chân dung người dùng | Ai là người dùng chính của màn hình/luồng này? (vai trò, bối cảnh sử dụng ngắn gọn) |
 | **2** | Công việc cần làm (JTBD) | Người dùng cần **hoàn thành công việc gì** trên màn hình/luồng này? (một câu, tránh mô tả tính năng chung chung) |
-| **3** | Tiêu chí thành công | Thế nào được coi là **thành công** sau khi dùng xong? (ví dụ: đặt xong lịch, gửi được đơn, tìm được sản phẩm đúng — có thể định tính) |
+| **3** | Tiêu chí thành công | Thế nào được coi là **thành công** sau khi dùng xong? (ví dụ: đặt xong lịch, gửi được đơn) |
 
 **Quy tắc:**
+- Chỉ hỏi câu tương ứng **thông tin đang thiếu**.
+- **Không** vượt quá **3 câu** trong một lượt; flow phức tạp có thể thêm tối đa 2 câu bổ sung (thứ tự màn, mức accessibility, persona ưu tiên).
+- Nếu user nói **"bỏ qua" / "audit luôn"**: ghi trong báo cáo phần JTBD Context là *được suy luận từ giao diện*, rồi tiếp tục.
+
+## Workflow — Phased Execution
+
+Tổng token mục tiêu (đã hiệu chỉnh thực tế):
+
+| Scope | Token budget |
+|-------|--------------|
+| Component đơn lẻ | 10–20K |
+| 1 màn trung bình (≤50 nodes) | 20–40K |
+| 1 màn phức tạp (>50 nodes, có biến/component lồng) | 40–70K |
+| Luồng 3–5 màn | 80–150K — đề xuất chia phiên 1 màn / session |
+
+Naive review không phased có thể vượt 100K cho 1 màn — chênh lệch là kỷ luật phase + scratchpad.
 
-- Chỉ hỏi những câu tương ứng với **thông tin đang thiếu**. Nếu user đã viết rõ trong tin đầu (VD: đã có persona + job + tiêu chí), **không** lặp lại câu đó.
-- **Không** vượt quá **3 câu** trong một lượt, trừ khi user **chủ động** yêu cầu audit sâu hoặc scope là **flow phức tạp** — khi đó có thể thêm **tối đa 2 câu bổ sung** (xem dưới).
-- Nếu user trả lời **ngắn hoặc một phần**, coi là đủ để tiếp tục; chỉ hỏi lại phần **vẫn trống**.
-- Nếu user nói **"bỏ qua" / "không cần" / "audit luôn"**: ghi trong báo cáo phần **JTBD Context** là *được suy luận từ giao diện*, rồi tiếp tục workflow.
+### Scratchpad pattern (BẮT BUỘC)
+
+Đầu mỗi review, tạo file `./review-scratchpad-<screen>-<YYYYMMDD-HHMM>.md` chứa:
+
+```
+# Review Session: [Screen]
+Started: [timestamp]
+Phase: [P0/P1/P2/P3/P4]
+
+## Context
+- Sản phẩm / nền tảng: [Web / iOS / Android / SaaS]
+- Màn hình / luồng: [tên]
+- Vai trò user: [...]
+- Phạm vi: [Một màn / Luồng / Component]
+- Figma node ID: [...]
+- Screenshot fetched: [yes/no]
 
-### Hai câu tùy chọn (chỉ khi cần)
+## Framing
+### JTBD
+- Khi: [tình huống cụ thể]
+- Tôi muốn: [mong muốn — mục tiêu, không phải tính năng]
+- Để: [outcome cuối]
 
-Chỉ thêm khi **một trong các điều kiện** sau đúng **và** thông tin chưa có trong chat:
+### User Stories (US-01 … US-N, tối đa 5)
+- US-01: Là [vai trò], tôi muốn [hành động] để [lợi ích].
+  AC: [3–5 tiêu chí testable]
+- US-02: ...
 
-| Điều kiện | Câu hỏi bổ sung (chọn 1–2, tiếng Việt) |
-|-----------|--------------------------------------|
-| Phạm vi là **luồng nhiều màn** hoặc **prototype** | Thứ tự màn hình / nhánh chính trong luồng là gì? Có điểm rẽ nhánh quan trọng nào cần audit không? |
-| Cần đánh giá **tiếp cận (accessibility)** kỹ | Mức tiêu chí mong muốn là gì (ví dụ: WCAG AA), và nền tảng chính (web / iOS / Android)? |
-| **Nhiều persona** hoặc **nhiều use-case** | Persona hoặc kịch bản nào là **ưu tiên** cho lần audit này? |
+### Hypothesis (1, hoặc 2 nếu equally plausible)
+- Tin rằng: [decision]
+- Cho: [user segment]
+- Sẽ tạo ra: [outcome đo được]
+- Vì: [bằng chứng]
+- Đo bằng: [signal/metric]
 
-### Vì sao cần cơ chế này
+## Lens Plan (4 trục)
+- [✅/⏭️] UI       — craft, token, contrast, state
+- [✅/⏭️] UX       — flow, hierarchy, error prevention, feedback
+- [✅/⏭️] Nghiệp vụ — happy/unhappy path, edge case, role/permission, data state
+- [✅/⏭️] Use-case  — US coverage, AC testable, outcome metrics
 
-Giảm gap **JTBD suy luận sai**, giảm báo cáo **thiếu tiêu chí thành công**, và giúp phần **severity / behavioral impact** bám sát nghiệp vụ thật khi user có thể bổ sung trong vài câu trả lời.
+## Findings (compressed)
+[severity][trục][node][hypothesis-link][US-XX][img:F-XXX]: ≤15-word
 
-## Required Workflow
+Ví dụ:
+🔴 [Nghiệp vụ][confirm-screen][challenges H1][US-02][img:F-001]: thiếu phí giao dịch trước xác nhận
+🟡 [UX][cta-btn][supports H1][US-01][img:F-002]: tap target 36×36, chuẩn ≥44 (WCAG 2.5.8)
+🟢 [UI][card-list][unrelated][—][img:—]: gap 13px lệch grid 4pt
 
-**Thực hiện tuần tự 12 bước. Không bỏ bước.**
+## Gate Computation (Phase 3)
+- UI %:        [/100]   (X/11 active, [measured/inferred ratio])
+- UX %:        [/100]   (X/9 active, toàn inferred — confidence ±10–15%)
+- Nghiệp vụ %: [/100]   (X/10, toàn inferred — confidence ±10–15%)
+- Use-case %:  [/100]   (X/8 active)
+- MIN:         [%]
+- Hard gate:   [PASS / FAIL — lý do]
+- Decision:    [READY / READY WITH NOTES / NEEDS REWORK / BLOCKED]
+- Out_of_scope items → §Khuyến nghị test sau bàn giao
 
-### Step 1: Thu thập context
+## Edits Applied (Phase 4 — COOK NOW)
+- [timestamp] [node] [change] — [result]
+```
 
-1. Parse Figma URL để extract `fileKey` và `nodeId`.
-2. Xác định scope audit:
-   - **Full page**: audit toàn bộ page/screen
-   - **Flow**: audit một user flow trải qua nhiều screen
-   - **Component**: audit một component cụ thể
-3. Áp dụng [Cơ chế hỏi bổ sung (3 câu tối thiểu)](#cơ-chế-hỏi-bổ-sung-3-câu-tối-thiểu): nếu thiếu persona / job / tiêu chí thành công, **hỏi trước**, chờ trả lời (hoặc xác nhận bỏ qua), rồi mới sang Step 2.
-4. Ghi nhận platform (web/iOS/Android) và mức accessibility nếu user đã cung cấp (hoặc từ câu hỏi tùy chọn).
+Findings sống ở scratchpad, **KHÔNG sống trong chat**. Chat chỉ để giao tiếp với user.
 
-### Step 2: Capture current state
+### P0 — Triage + Framing (~1.5–3K tokens)
 
-Thu thập dữ liệu từ Figma song song:
+**Mục tiêu**: xác định scope, fetch Figma 1 lần, derive framing, plan lens.
 
-1. `get_screenshot(fileKey, nodeId)` — visual snapshot làm evidence.
-2. `get_metadata(fileKey, nodeId)` — layer structure, hierarchy, positions, sizes.
-3. `get_design_context(fileKey, nodeId)` — tokens, styles, component references, variables.
+1. **Xác nhận context** (skip nếu user đã ghi rõ):
+   - Nền tảng (Web / iOS / Android / SaaS)?
+   - Màn hình / luồng / component?
+   - Vai trò user chính?
+   - Phạm vi audit (1 màn / nhiều màn / 1 component)?
+   - Tiêu chí thành công (nếu có)?
 
-**Lưu ảnh chụp để nhúng vào báo cáo:**
-- Dùng `get_screenshot` cho toàn bộ screen (ảnh tổng quan) và cho từng vùng có finding (ảnh chi tiết).
-- Lưu ảnh vào thư mục cùng cấp với file báo cáo, đặt tên theo mã finding: `screenshot-overview.png`, `screenshot-F001.png`, `screenshot-F002.png`, ...
-- Nhúng vào báo cáo bằng cú pháp markdown: `![Mô tả](screenshot-F001.png)`
+   **Tối đa 3 câu hỏi**, đánh số 1–3, chỉ hỏi phần thiếu. Nếu user nói "audit luôn" → ghi vào scratchpad "framing suy luận từ giao diện" và tiếp.
 
-Nếu design quá lớn (get_design_context bị truncate), dùng `get_metadata` để lấy child node IDs rồi fetch từng phần.
+2. **Fetch Figma 1 lần**: `get_screenshot` + `get_design_context` + `get_metadata` + `get_variable_defs` cho node mục tiêu. Lưu ảnh `screenshot-overview.png`. **Không fetch lại cùng node ở phase sau.**
 
-### Step 3: JTBD Analysis
+3. **Token guard** — sau khi fetch metadata, kiểm:
+   - Nếu `node count > 80` → cảnh báo user "scope lớn, đề xuất chia"
+   - Nếu `get_design_context` truncate → fallback: chia subtree, audit từng phần, ghi gate riêng cho mỗi subtree, gộp ở P3
+   - Nếu user muốn audit luồng > 3 màn → đề xuất audit 1 màn / session, tránh context overflow
 
-Trước khi đánh giá heuristic, xác định JTBD context. Tham chiếu [jtbd-framework.md](jtbd-framework.md).
+4. **Viết Framing vào scratchpad**:
+   - JTBD: "Khi [tình huống], tôi muốn [hành động] để [outcome]."
+   - User Stories: tối đa 5, mỗi US có 3–5 AC testable.
+   - Hypothesis: liên kết design decision nổi bật với outcome + bằng chứng.
 
-1. **Xác định Job chính**: Mô tả công việc cốt lõi mà user cần hoàn thành trên screen/flow này.
-2. **Xây dựng Job Map**: Phân tách job thành các Job Steps theo chuỗi:
-   `Define → Locate → Prepare → Confirm → Execute → Monitor → Resolve`
-   Chỉ chọn các step relevant cho screen đang audit.
-3. **Viết User-Story** cho mỗi job step:
-   `"As a [persona], I want to [action trên screen] so that [desired outcome]"`
-   Outcome phải là kết quả cụ thể, không phải mô tả tính năng.
-4. **Xây dựng Hypothesis**:
-   `"We believe [design decision] will help [persona] achieve [outcome] because [rationale]"`
-   Hypothesis là baseline để đánh giá design hiện tại.
-5. **Xác định Desired Outcome** cho mỗi user-story theo 3 chiều:
-   - **Speed**: Nhanh đến mức nào?
-   - **Accuracy**: Đúng không? Có lỗi không?
-   - **Satisfaction**: Mượt mà không? Frustration không?
+5. **Plan Lens** (xem Skip Rules bên dưới). Đánh dấu ✅ / ⏭️ cho 4 trục.
 
-### Step 4: Phân tích cấu trúc design
+**Exit**: scratchpad có Context + Framing + Lens Plan → P1.
 
-Dùng dữ liệu từ Step 2 để kiểm tra:
+### P1 — Load KB targeted (~1.5–2K tokens)
 
-1. **Layer naming**: Tên layer có semantic, dễ hiểu cho developer không?
-2. **Hierarchy**: Cấu trúc parent-child hợp lý không?
-3. **Auto-layout**: Có sử dụng auto-layout thay vì absolute positioning không?
-4. **Component usage**: Dùng library component hay local/detached?
-5. **Responsive constraints**: Có set constraints phù hợp không?
+Chỉ load section heuristics/checklist tương ứng lens đã plan.
 
-Dùng `use_figma` (read-only) nếu cần inspect chi tiết mà `get_metadata` không cung cấp đủ.
+| Lens | File + Section |
+|------|---------------|
+| UI | `heuristics.md` §4 Typography, §5 Layout, §6 Color, §7 Interactive States; `checklist.md` Trục UI |
+| UX | `heuristics.md` §1 Visibility, §2 Consistency, §3 Navigation, §8 Error Prevention; `checklist.md` Trục UX |
+| Nghiệp vụ | `checklist.md` Trục NV; `jtbd-framework.md` Outcome Metrics |
+| Use-case | `jtbd-framework.md` toàn file; `checklist.md` Trục UC |
 
-### Step 5: Heuristic Evaluation
+**Exit**: KB sections cần thiết đã load → P2.
 
-Áp dụng bộ tiêu chuẩn kết hợp từ [heuristics.md](heuristics.md). Đánh giá theo [checklist.md](checklist.md).
+### P2 — Run 4 lenses (~1.5–3K tokens / lens)
 
-8 nhóm đánh giá:
+Chạy lần lượt từng lens ✅. Chạy lens nào, ghi `### Running: [Trục]` vào scratchpad.
 
-1. Visibility & Feedback
-2. Consistency & Standards
-3. Navigation & Information Architecture
-4. Typography & Readability
-5. Layout & Spacing
-6. Color & Contrast
-7. Interactive States
-8. Error Prevention & Recovery
+#### Lens 1 — UI (Craft) — 11 items active
 
-**Quy tắc quan trọng**: Khi ghi nhận finding, luôn đặt trong bối cảnh JTBD — finding này cản trở job step nào? Ảnh hưởng user-story nào?
+Áp checklist Trục UI trong [checklist.md](checklist.md). Mỗi item: pass/fail + method tag. Đo trực tiếp từ data fetched ở P0:
+- Token usage (UI-01, UI-02): % element bind variable vs hardcode
+- Spacing (UI-03), border radius (UI-05), color palette (UI-06): đếm distinct values
+- Type hierarchy (UI-04): đếm distinct font sizes
+- Auto-layout (UI-08), constraint (UI-09): từ metadata
+- Icon (UI-07), state coverage (UI-10, UI-11): inferred từ naming/variants
 
-**Chụp ảnh cho từng finding:**
-Mỗi khi phát hiện lỗi, xác định nodeId của vùng có vấn đề (từ metadata ở Step 2), rồi gọi `get_screenshot(fileKey, nodeId)` cho đúng node đó. Lưu thành `screenshot-FXXX.png`. Ảnh này phải chụp sát vùng lỗi (node chứa vấn đề), không phải ảnh toàn màn hình — để người đọc nhìn vào biết ngay lỗi ở đâu.
+#### Lens 2 — UX (Usability) — 9 items active
 
-### Step 6: UX Writing Analysis
+Áp checklist Trục UX. Lưu ý: toàn `inferred` → confidence ±10–15%.
 
-Phân tích chất lượng nội dung chữ trên màn hình/luồng. Dùng dữ liệu text từ `get_design_context` và `get_metadata`.
+Quan trọng:
+- **Cognitive load (UX-02)**: số interactive element + nhóm thông tin + decision points trên 1 viewport. Target ≤12.
+- **Loading / Empty / Error / Success state** (UX-05–07): mọi async + mọi list view + mọi form phải có đủ.
+- **Destructive action** (UX-10): confirm dialog hoặc undo affordance.
+- **Dead-end** (UX-08): mọi state phải có path tiếp theo.
+- **Nielsen 1–10**: visibility, match real world, user control, consistency, error prevention, recognition over recall, flexibility, minimalist, recover from errors, help.
 
-1. **Microcopy & Labels**:
-   - Label có rõ nghĩa, đúng hành động không? (VD: "Gửi" vs "Gửi yêu cầu" vs "Submit")
-   - Placeholder có giúp user hiểu cần nhập gì không?
-   - Tooltip / helper text có đủ và đúng ngữ cảnh không?
+Items `out_of_scope` (UX-01, UX-03, UX-04) → ghi vào "Khuyến nghị test sau bàn giao", **không tính %**.
 
-2. **Error Messages**:
-   - Thông báo lỗi có nói rõ **lỗi gì** + **cách sửa** không?
-   - Tránh thông báo chung chung ("Đã xảy ra lỗi") hoặc mã kỹ thuật ("Error 500")
-   - Giọng văn có thân thiện, không đổ lỗi cho user không?
+#### Lens 3 — Nghiệp vụ (Business Logic) — 10 items active
 
-3. **Tone of Voice**:
-   - Nhất quán giọng văn xuyên suốt (trang trọng / thân thiện / trung tính)?
-   - Phù hợp với chân dung người dùng và bối cảnh sử dụng?
-   - Có chỗ nào dùng thuật ngữ kỹ thuật mà user không hiểu?
+**Đây là lens dễ bị bỏ qua nhất.** Áp checklist Trục NV. Toàn `inferred`, phụ thuộc nặng vào brief từ user và naming convention.
 
-4. **Empty State & Onboarding Copy**:
-   - Trạng thái trống có hướng dẫn user làm gì tiếp không?
-   - Copy có tạo động lực hành động (actionable) không?
+Quan trọng:
+- **Happy path coverage (NV-01)**: từng bước job map có UI tương ứng?
+- **Unhappy path coverage (NV-02–05)**: empty data / network error / timeout / permission denied / session expired có UI?
+- **Role-based view (NV-07)**: nếu nhiều vai trò, mỗi vai trò có quyền/view phù hợp? Disabled vs Hidden chọn đúng?
+- **Data scale (NV-08)**: zero / 1 / few / many / max — design có scale không?
+- **Validation (NV-06)**: required field rõ trước khi nhập, format hint, ràng buộc business.
+- **Trust signals (NV-09)** ở bước nhạy cảm (thanh toán, nhập PII).
+- **Confirmation cho action không reversible (NV-10)**: kèm summary (cái gì, ai, bao nhiêu, khi nào).
 
-5. **CTA Clarity**:
-   - Nút hành động có nói rõ sẽ xảy ra gì khi nhấn không?
-   - Phân biệt được hành động chính / phụ qua ngôn ngữ?
+#### Lens 4 — Use-case (JTBD Coverage) — 8 items active
 
-Mỗi vấn đề về UX Writing tạo finding riêng, gắn mã F-XXX, chụp ảnh vùng có vấn đề.
+Áp checklist Trục UC. Kiểm tra:
+- **US Coverage (UC-04, UC-07)**: với mỗi US trong scratchpad, design có UI element phục vụ không? Đánh dấu ✅ Tốt / ⚠️ Thiếu sót / ❌ Chưa đáp ứng.
+- **AC testability (UC-03)**: mỗi AC đọc xong, designer/dev biết ngay test gì?
+- **Outcome metrics (UC-05)**: với mỗi US, nói được Speed/Accuracy/Satisfaction được tăng/giảm như thế nào.
+- **UI orphan (UC-08)**: có UI element nào không phục vụ US nào (= over-design)?
+- **Hypothesis có bằng chứng (UC-06)**: mọi 🔴/🟡 hypothesis trích nguồn cụ thể.
 
-### Step 7: UX Flow Analysis
+### Per-finding format (compressed, vào scratchpad)
 
-Phân tích luồng trải nghiệm tổng thể. Nếu scope là luồng nhiều màn, đánh giá toàn bộ; nếu scope là 1 màn, đánh giá luồng nội bộ trong màn đó.
+```
+[severity][trục][node-id][hypothesis-link][US-XX][img:F-XXX]: ≤15-word
+```
 
-1. **Số bước hoàn thành**:
-   - Đếm số bước để hoàn thành job chính
-   - So sánh với mức hợp lý (có bước nào thừa / gộp được không?)
-   - Áp dụng nguyên tắc: càng ít bước càng tốt, nhưng mỗi bước phải rõ ràng
+- severity: 🔴 / 🟡 / 🟢
+- trục: UI / UX / NV / UC
+- node-id: **ID Figma thật** (ví dụ `123:456`), không chỉ tên — để có thể fetch lại
+- hypothesis-link: `supports H1` / `challenges H1` / `reveals H?` / `unrelated`
+- US-XX: ID user story bị ảnh hưởng, hoặc `—` nếu là 🟢 polish
+- img: tên file ảnh đã chụp, ví dụ `screenshot-F-001.png`
 
-2. **Điểm rẽ nhánh (Decision Points)**:
-   - Có bao nhiêu chỗ user phải chọn / quyết định?
-   - Mỗi điểm rẽ có đủ thông tin để quyết định không?
-   - Có nhánh nào dẫn đến dead-end (bế tắc) không?
+**Quy tắc**: finding 🔴 và 🟡 BẮT BUỘC gắn US-XX. Không gắn được → finding đó là polish (🟢) hoặc noise (bỏ).
 
-3. **Drop-off Risk**:
-   - Bước nào user dễ bỏ dở nhất? (form dài, chờ lâu, yêu cầu thông tin nhạy cảm)
-   - Có cơ chế lưu tiến trình / quay lại không?
-   - Có thoát khẩn cấp (escape hatch) ở mỗi bước không?
+### Evidence Capture Rules — BẮT BUỘC
 
-4. **Luồng ngược (Back Flow)**:
-   - User có thể quay lại bước trước để sửa không?
-   - Dữ liệu đã nhập có được giữ lại khi quay lại không?
+**Mỗi finding phải có ít nhất 1 ảnh node lỗi.** Đây không phải optional, không "thêm sau ở P3" — chụp **ngay tại lúc tạo finding** trong P2.
 
-5. **Luồng ngoại lệ**:
-   - Lỗi mạng / timeout: có xử lý không?
-   - Input không hợp lệ: validate inline hay chờ cuối?
-   - Hết phiên đăng nhập giữa chừng: có cảnh báo / recovery không?
+**Workflow chụp ảnh inline (mỗi khi tạo 1 finding mới):**
 
-Tạo finding cho mỗi vấn đề về flow, gắn mã F-XXX.
+1. Xác định **nodeId Figma thật** của vùng có vấn đề (lấy từ metadata ở P0 — KHÔNG đoán). Vùng có vấn đề có thể là:
+   - Bản thân node lỗi (ví dụ button nhỏ → chụp button)
+   - Parent của node lỗi để cho ngữ cảnh (ví dụ field thiếu validation → chụp cả form)
+   - Nhóm 2 node để so sánh (ví dụ inconsistency 2 button khác màu → chụp cả khối chứa cả 2)
 
-### Step 8: UX Emotion Mapping
+2. Gọi `get_screenshot(fileKey, nodeId)` cho đúng node đó. **Không dùng lại ảnh overview**.
 
-Ánh xạ cảm xúc người dùng qua từng bước trong luồng. Phân tích dựa trên thiết kế (visual cues, copy, flow structure) — không phải dữ liệu người dùng thật.
+3. Lưu ảnh thành `screenshot-F-XXX.png` cùng thư mục báo cáo. Mã `F-XXX` zero-padded 3 chữ số (`F-001`, `F-012`, không `F-1`).
 
-1. **Emotion Map**: Với mỗi bước công việc từ Step 3 (Job Map), đánh giá cảm xúc chủ đạo:
+4. Ghi đường dẫn ảnh vào trường `[img:...]` của compressed finding ngay lúc đó.
 
-| Cảm xúc | Dấu hiệu trên thiết kế |
-|----------|------------------------|
-| **Tin tưởng (Trust)** | Logo uy tín, chính sách rõ, biểu tượng bảo mật, social proof |
-| **Lo lắng (Anxiety)** | Yêu cầu thông tin nhạy cảm, hành động không thể hoàn tác, thiếu giải thích |
-| **Vui / Hài lòng (Delight)** | Phản hồi thành công rõ ràng, animation vui, tiến trình hiển thị, reward |
-| **Bực bội (Frustration)** | Form dài, lỗi không rõ, phải nhập lại, chờ không biết bao lâu |
-| **Bối rối (Confusion)** | Quá nhiều lựa chọn, thuật ngữ lạ, không biết bước tiếp |
-| **An tâm (Reassurance)** | Xác nhận rõ, tóm tắt trước khi gửi, cho phép sửa |
+5. Nếu cần ảnh phụ, đặt tên `screenshot-F-XXX-a.png`, `screenshot-F-XXX-b.png` và liệt kê hết trong `[img:...]` cách nhau bằng `|`.
 
-2. **Emotion Journey**: Tạo bảng ánh xạ cảm xúc theo bước:
+**Nguyên tắc chọn vùng chụp:**
 
-| Bước | Cảm xúc dự kiến | Cảm xúc thực tế (từ thiết kế) | Chênh lệch |
-|------|-----------------|-------------------------------|------------|
-| [Bước] | [Mong đợi user cảm thấy gì] | [Thiết kế thực tế gợi cảm xúc gì] | [Tích cực / Tiêu cực / Phù hợp] |
+| Loại finding | Chụp gì |
+|--------------|---------|
+| Element nhỏ (button, icon, label) | Parent container của element để có ngữ cảnh |
+| Inconsistency giữa 2 chỗ | Cả 2 chỗ — 2 ảnh riêng hoặc 1 ảnh chứa cả 2 |
+| Thiếu state (empty/error/loading) | Frame chứa state đó nếu có; nếu thiếu hoàn toàn → ảnh frame chính + ghi chú "không có frame state này" |
+| Flow issue (dead-end, missing step) | Cả luồng (chụp parent của các màn liên quan) |
+| Contrast / typography | Vùng text đó + đủ background để thấy contrast thực |
+| Layout / spacing | Frame chứa các element bị spacing sai |
 
-3. **Điểm đỉnh & điểm đáy (Peak & Valley)**:
-   - Điểm đỉnh: bước nào thiết kế tạo trải nghiệm tích cực nhất? Có đủ mạnh không?
-   - Điểm đáy: bước nào gây cảm xúc tiêu cực nhất? Có cách giảm nhẹ không?
-   - Áp dụng Peak-End Rule: cảm xúc ở bước cuối cùng ảnh hưởng lớn đến trải nghiệm tổng thể
+**Cấm:**
+- ❌ Tạo finding mà chưa chụp ảnh — finding sẽ bị invalidate ở P3 validation
+- ❌ Dùng lại `screenshot-overview.png` cho finding cụ thể
+- ❌ Ghi `[img:N/A]` hoặc `[img:—]` cho finding 🔴/🟡 — chỉ 🟢 polish được phép không ảnh
+- ❌ Chụp toàn bộ màn cho finding chỉ ảnh hưởng 1 button
 
-4. **Trust Signals**:
-   - Có đủ dấu hiệu tin cậy tại các bước nhạy cảm (thanh toán, nhập thông tin cá nhân)?
-   - Thiếu trust signal nào quan trọng?
+**Validation ở P3 (trước khi compile báo cáo):**
+1. Mỗi finding 🔴/🟡 trong scratchpad có trường `[img:...]` không?
+2. File ảnh tương ứng có tồn tại trong thư mục báo cáo không?
+3. Nếu thiếu → chụp lại ngay (vẫn còn nodeId trong finding), không skip.
 
-Tạo finding cho mỗi chênh lệch cảm xúc tiêu cực, gắn mã F-XXX.
+Báo cáo cuối phải đạt: **100% finding 🔴 và 🟡 có ảnh nhúng**.
 
-### Step 9: UX Behavioral Impact Analysis
+**Exit P2**: 4 lens ✅ đã chạy hoặc đã skip với lý do → P3.
 
-Với mỗi finding từ Step 5–8, phân tích sâu 3 tầng tác động:
+### P3 — Compute Gate + Compile (~3–5K tokens)
 
-1. **Behavioral Impact**: Finding thay đổi/cản trở hành vi sử dụng như thế nào?
-   - Tăng cognitive load?
-   - Gây confusion/mismatch expectation?
-   - Tạo friction/dead-end trong flow?
-   - Buộc user phải học pattern mới không cần thiết?
+1. **Đọc scratchpad 1 lần**, không re-fetch Figma.
+2. **Tính % mỗi trục** theo công thức trong [gate-rules.md](gate-rules.md):
+   - Mẫu số = items `measured` + `inferred` (loại `out_of_scope`)
+   - Đếm pass/fail mỗi item, tag method tag
+   - Nếu trục có ≥40% items inferred → mark confidence ±10%
+3. **Apply hard gate**: nếu vi phạm bất kỳ H1–H11 → BLOCKED, không tính score gate.
+4. **Apply score gate**: MIN(4 trục) quyết định status.
+5. **Apply severity gate**: P0 mở > 0 → BLOCKED.
+6. **Quyết định cuối** = giá trị thấp nhất trong 3 gate.
+7. **Liệt kê items `out_of_scope`** vào §"Khuyến nghị test sau bàn giao" trong báo cáo.
+8. **Expand compressed finding** → prose tiếng Việt theo [report-template.md](report-template.md).
+9. **Sắp xếp**: Gate Decision Box trước, sau đó Framing, sau đó 🔴 → 🟡 → 🟢.
+10. **Xuất 2 file**: `bao-cao.md` + `bao-cao.html` (ảnh base64), thư mục `~/Downloads/audit-report-<screen>-<YYYY-MM-DD>/`.
 
-2. **User-Story Impact**: Finding ảnh hưởng đến user-story nào từ Step 3?
-   - User không thể hoàn thành action gì?
-   - User phải thực hiện thêm bước nào không cần thiết?
-   - Flow bị gián đoạn ở đâu?
+### P4 — Apply fix (gated, optional — chế độ COOK NOW)
 
-3. **Outcome Impact**: Ảnh hưởng cuối cùng đến desired outcome:
-   - **Speed** giảm: thêm bước, thêm thời gian chờ, thêm suy nghĩ
-   - **Accuracy** giảm: dễ nhầm, dễ bỏ sót, undo nhiều
-   - **Satisfaction** giảm: frustration, confusion, thiếu tin tưởng
+Chỉ vào P4 khi user nói rõ "apply fix nào" / "COOK NOW".
 
-### Step 10: Design System consistency
+**Workflow**:
 
-Dùng `search_design_system` + `get_design_context` để kiểm tra:
-
-1. **Detached styles**: Raw hex/RGB thay vì design tokens.
-2. **Hardcoded values**: Spacing, border-radius, font-size không theo scale.
-3. **Component drift**: Local component thay vì library instance.
-4. **Missing states**: Component thiếu hover, disabled, error states.
-5. **Variable usage**: Có bind variables cho color, spacing không? Multi-mode (Light/Dark) support?
-
-### Step 11: Severity classification
-
-Phân loại theo ma trận Frequency × Impact, tính thêm JTBD weight:
-
-| Severity | Tiêu chí | JTBD Weight |
-|----------|----------|-------------|
-| **P0 (Critical)** | Impact: High, Frequency: High | Chặn hoàn toàn job chính. Developer không thể implement đúng. User không đạt outcome. |
-| **P1 (Major)** | Impact: High/Medium, Frequency: Medium | Gây friction đáng kể trong job step. Có workaround nhưng giảm chất lượng outcome. |
-| **P2 (Minor)** | Impact: Low/Medium, Frequency: Low | Ảnh hưởng nhỏ đến trải nghiệm. Không chặn outcome nhưng giảm satisfaction. |
-
-Quy tắc nâng severity:
-- Finding chặn job step "Execute" hoặc "Confirm" → nâng ít nhất P1.
-- Finding khiến user không thể hoàn thành outcome → nâng P0 bất kể frequency.
-- Finding ảnh hưởng accessibility (WCAG A/AA fail) → nâng ít nhất P1.
-
-### Step 12: Tạo báo cáo audit
-
-Tạo báo cáo theo template từ [report-template.md](report-template.md).
-
-**Quy tắc output**:
-- Ngôn ngữ: Tiếng Việt.
-- Mỗi finding phải có: evidence (screenshot), user-story liên quan, hypothesis tham chiếu, phân tích behavioral impact, đề xuất khắc phục.
-- Đề xuất khắc phục phải liên kết với việc khôi phục outcome cho user.
-- Sắp xếp findings theo severity: P0 → P1 → P2.
-
-**Quyết định bàn giao (chuẩn chính):** Áp dụng [gate-rules.md](gate-rules.md): **Tầng 1** Hard Gate H1–H11; **Tầng 2** Score Gate — mỗi trục UI / UX / Nghiệp vụ / Use-case ≥80%, quyết định tổng = `MIN(% 4 trục)`; **Tầng 3** Severity — P0 mở có thể BLOCKED. Xuất khối `HAND-OFF DECISION` như trong [report-template.md](report-template.md).
-
-**Điểm /100 (bổ sung, không thay gate):** Có thể tính thêm theo [checklist.md](checklist.md) (bốn trụ A–D × 25 điểm) để **tóm tắt chất lượng** hand-off readiness. Nếu mâu thuẫn với gate (ví dụ điểm cao nhưng Hard Gate fail) → **ưu tiên gate-rules**.
-
-**Anti-hallucination (định lượng H1–H11):** Chỉ ghi **phần trăm đạt** và **danh sách node vi phạm cụ thể** khi đã đếm/quét được bằng `use_figma` hoặc phân tích metadata có hệ thống. Nếu chỉ suy luận từ ảnh/context → ghi **`[ước lượng]`** hoặc **`[inferred ±X%]`** theo [gate-rules.md](gate-rules.md), **không** bịa số node hoặc % chính xác giả.
-
-**Xuất báo cáo:**
-
-1. Tạo thư mục `~/Downloads/audit-report-[tên-màn-hình]-[YYYY-MM-DD]/` chứa:
-   - `bao-cao.md` — báo cáo markdown
-   - `bao-cao.html` — báo cáo HTML (ảnh nhúng base64, xem được ngay trên trình duyệt)
-   - `screenshot-overview.png`, `screenshot-FXXX.png` — ảnh gốc
-
-2. File HTML được tạo bằng cách:
-   - Chuyển markdown sang HTML
-   - Đọc từng file ảnh, encode base64, thay thế `src="screenshot-*.png"` thành `src="data:image/png;base64,..."`
-   - Bọc trong template HTML có CSS đẹp, responsive, hỗ trợ in ấn
-
-3. Ưu tiên giao file HTML khi user cần chia sẻ — 1 file duy nhất, mở trên mọi trình duyệt, không cần gửi kèm ảnh.
-
-## Chế độ COOK NOW (tùy chọn) — checklist → bạn chọn → agent sửa trên Figma
-
-Chế độ này dùng khi user muốn: **biến phần “đề xuất hành động” thành checklist có mô tả sửa**, sau đó user **chọn** các mục cần làm và xác nhận **COOK NOW**, rồi agent **thực hiện chỉnh sửa trên Figma**.
-
-### Điều kiện bắt buộc
-
-- User nói rõ muốn **COOK NOW** và đồng ý cho agent **chỉnh sửa** file Figma.
-- Token/MCP phải có quyền **edit** file.
-- Trước mọi thao tác chỉnh sửa bằng `use_figma`, **bắt buộc** phải nạp skill [figma-use](../figma-use/SKILL.md) (quy tắc môi trường).
-
-### Workflow COOK NOW (thực hiện sau Step 12)
-
-1. **Tạo “Checklist áp dụng”** trong phần khuyến nghị:
+1. **Tạo "Checklist áp dụng"** trong phần khuyến nghị:
    - Mỗi mục có mã: `A-001`, `A-002`, ...
    - Gắn với finding: `F-XXX`
-   - Có mô tả **cách sửa trên Figma** (node/section nào, thay đổi gì: autolayout, spacing, text style, constraints, swap component, bind variables, thêm state frame/variant, v.v.)
-   - Đánh dấu loại công việc:
-     - `auto` (agent có thể sửa an toàn)
-     - `needs_decision` (cần user chọn phương án trước)
-     - `manual` (khó tự động; chỉ hướng dẫn)
+   - Có mô tả **cách sửa trên Figma** (node/section nào, thay đổi gì: autolayout, spacing, text style, constraints, swap component, bind variables, thêm state frame/variant)
+   - Đánh dấu loại: `auto` / `needs_decision` / `manual`
 
-2. **Hỏi user chọn mục**:
-   - Trình bày danh sách theo P0 → P1 → P2.
-   - Yêu cầu user trả lời: danh sách mã cần áp dụng (VD: `A-001, A-004, A-007`) hoặc chọn “COOK NOW tất cả P0”.
+2. **Hỏi user chọn mục** → chờ xác nhận `COOK NOW`.
 
 3. **Trước khi sửa: tạo bản sao dự phòng (backup)**:
    - Dùng `use_figma` để duplicate frame/page mục tiêu, đặt tên `Backup - Before COOK NOW - <timestamp>`.
    - Trả về ID của backup trong log.
 
-4. **Áp dụng theo từng batch nhỏ**:
-   - Mỗi batch chỉ sửa 1–3 mục checklist để giảm rủi ro.
-   - Sau mỗi batch: chụp `get_screenshot` để user kiểm tra.
+4. **Áp dụng theo từng batch nhỏ** (1–3 mục/batch):
+   - Re-fetch node mục tiêu để confirm còn match.
+   - Apply 1 thay đổi qua `use_figma`. Dùng semantic token, không hardcode. Giữ component instance.
+   - Verify bằng 1 `get_screenshot`.
+   - Log vào `## Edits Applied` trong scratchpad.
 
 5. **Báo cáo kết quả COOK NOW**:
    - Mục nào đã áp dụng, node IDs thay đổi, còn mục nào bị chặn (vì `needs_decision`/`manual`).
-   - Đính kèm ảnh trước/sau (hoặc ít nhất ảnh sau).
+   - Đính kèm ảnh trước/sau.
 
-### Quy tắc an toàn
+**Stop conditions**:
+- Edit affect design system source-of-truth → dừng, đề xuất designer tự làm.
+- Edit fail lần đầu → dừng, báo, hỏi.
+- Mục `needs_decision` → dừng, hỏi user chọn phương án.
+- User bảo dừng → dừng ngay.
 
-- Không xóa nội dung cũ nếu chưa có bản sao backup.
-- Không “đoán” các quyết định thiết kế (copy, IA lớn, layout chiến lược). Nếu cần, gắn `needs_decision`.
-- Khi gặp parent không auto-layout hoặc layout phức tạp: ưu tiên sửa **bên cạnh** (tạo bản mới) rồi xin user duyệt trước khi thay thế.
+## Skip Rules (cho P0 lens planning)
+
+| Trường hợp | Skip | Run |
+|-----------|------|-----|
+| Component đơn lẻ | Nghiệp vụ, Use-case | UI, UX |
+| Wireframe lo-fi | UI (visual chưa final) | UX, Nghiệp vụ, Use-case |
+| Một màn full mockup | — | cả 4 |
+| Luồng nhiều màn | — | cả 4, nhấn UX + Nghiệp vụ + Use-case |
+| Design system file | Nghiệp vụ, Use-case | UI, UX |
+| Static asset / illustration | UX, Nghiệp vụ, Use-case | UI |
+
+Skip phải ghi lý do trong scratchpad. Khi nghi ngờ → chạy mặc định.
 
 ## Conditional Workflows
 
 ### Khi audit full page
 
-Dùng `get_metadata` cho page-level node trước, sau đó drill-down vào từng screen/frame.
+Dùng `get_metadata` cho page-level node trước, sau đó drill-down vào từng screen/frame. Áp token guard.
 
 ### Khi audit một flow
 
-Yêu cầu user cung cấp node IDs cho tất cả screens trong flow. Audit từng screen rồi đánh giá thêm flow continuity giữa các screen.
+Yêu cầu user cung cấp node IDs cho tất cả screens trong flow. Audit từng screen, ghi gate riêng, gộp ở P3 + đánh giá thêm flow continuity giữa các screen. Đề xuất chia 1 màn / session khi >3 màn.
 
 ### Khi audit một component
 
-Tập trung vào component variants, states, token usage. Bỏ qua flow-level JTBD, chỉ đánh giá component-level job (VD: "click button để submit form").
+Tập trung vào component variants, states, token usage. Bỏ qua flow-level JTBD, chỉ đánh giá component-level job (VD: "click button để submit form"). Skip lens Nghiệp vụ + Use-case.
 
 ## Common Issues
 
 ### Design quá lớn, get_design_context bị truncate
 
-Dùng `get_metadata` lấy tree structure trước, rồi fetch từng subtree bằng `get_design_context` với child node IDs.
+Áp token guard P0. Dùng `get_metadata` lấy tree structure trước, rồi fetch từng subtree bằng `get_design_context` với child node IDs. Compute gate riêng cho mỗi subtree, gộp ở P3.
 
 ### Không có design system / library
 
-Bỏ qua Step 7 (Design System consistency). Ghi nhận trong báo cáo rằng design chưa có design system, khuyến nghị tạo.
+Bỏ qua các item UI-01, UI-02 (token usage). Ghi nhận trong báo cáo rằng design chưa có design system, khuyến nghị tạo. Compute trục UI trên mẫu số đã trừ items này.
 
 ### User không cung cấp đủ domain context cho JTBD
 
-Áp dụng [Cơ chế hỏi bổ sung (3 câu tối thiểu)](#cơ-chế-hỏi-bổ-sung-3-câu-tối-thiểu). Nếu user không trả lời hoặc yêu cầu bỏ qua, suy luận JTBD từ nội dung visual trên screen (text, labels, buttons, flow pattern) và ghi rõ trong báo cáo rằng JTBD context được suy luận.
+Áp dụng [Cơ chế hỏi bổ sung](#cơ-chế-hỏi-bổ-sung-3-câu-tối-thiểu). Nếu user không trả lời hoặc yêu cầu bỏ qua, suy luận JTBD từ visual content trên screen và ghi rõ "JTBD context được suy luận" trong báo cáo. Trục UC sẽ có confidence thấp hơn — ghi rõ trong gate output.
+
+## Anti-patterns
+
+- ❌ Chạy review không đọc `gate-rules.md` trước
+- ❌ Cat toàn bộ KB file thay vì đọc section
+- ❌ Pad 30 finding nhạt thay vì 5 finding sắc
+- ❌ Critique cái không thấy (Figma fetch fail → phải dừng, không "proceed degraded")
+- ❌ Bịa hypothesis không bằng chứng — nếu không chắc, ghi "cần user research validate"
+- ❌ Ép user story (màn phục vụ 2 US thì 2, không kéo thành 8)
+- ❌ Auto-apply edit không xin phép
+- ❌ Auto-apply edit động đến source-of-truth design system
+- ❌ Re-fetch cùng node Figma giữa các lens
+- ❌ Echo checklist từng dòng vào chat — checklist là mental walkthrough
+- ❌ Re-cite WCAG/Nielsen lặp lại — cite 1 lần, sau đó "same rule"
+- ❌ Khen xã giao "Thiết kế đẹp!" — khen phải cụ thể và link về US
+- ❌ Đóng bằng "Cho tôi biết nếu cần thêm" — dừng khi xong
+- ❌ Tính % cho item `out_of_scope` — phải loại khỏi mẫu số
+
+## Output rules
+
+- **Ngôn ngữ**: tiếng Việt. Thuật ngữ chuyên ngành tiếng Anh được giữ + giải nghĩa lần đầu xuất hiện.
+- **Mỗi finding 🔴 / 🟡**: bằng chứng (ảnh node lỗi) + US-XX bị ảnh hưởng + hypothesis tham chiếu + đề xuất cụ thể.
+- **Đề xuất**: đủ rõ để designer/dev hành động không cần hỏi lại.
+- **Cite bằng mã**: "WCAG 2.5.8", "Nielsen #5", "Material §spacing".
+- **Hypothesis chỉ viết cho 🔴 và 🟡.** 🟢 quá nhỏ.
+- **Bảng thuật ngữ** ở cuối báo cáo.
+- **Lưu báo cáo**: `~/Downloads/audit-report-<screen>-<YYYY-MM-DD>/` (md + html + ảnh).
+- **Method transparency**: trong Gate Decision Box ghi rõ measured / inferred / out_of_scope ratio cho mỗi trục.
+
+## Failure modes
+
+- **Figma fetch fail** → dừng. Báo: "Không truy cập được file Figma. Kiểm tra: (1) MCP connected, (2) token đủ quyền, (3) URL có node-id."
+- **KB file thiếu** → fallback dùng nguyên tắc embed trong file này. Cảnh báo: missing files giảm depth review.
+- **Token áp lực giữa review** → dừng lens mới. Compile phần đã có. Báo: "Đã review [trục đã chạy], deferred [trục chưa chạy] — chạy pass khác?"
+- **User ngắt giữa chừng** → save scratchpad. Ack. Chờ.
+- **Resume sau ngắt** → đọc scratchpad, xác định phase cuối, tiếp từ đó. Nếu Figma đã thay đổi giữa 2 session → cảnh báo user, có thể cần re-fetch.
 
 ## Giới hạn đã biết
 
-Mục này đặt **kỳ vọng đúng**: audit qua MCP và LLM không thay thế toàn bộ quy trình con người và công cụ chuyên dụng.
-
 **Giới hạn kỹ thuật Figma MCP**
 
-- Không có quyền đọc file/token không khớp scope → không audit được; agent chỉ báo lỗi và nhắc kiểm tra quyền hoặc URL.
-- File **Figma Make** không khớp một số luồng đọc (`get_metadata` có giới hạn theo mô tả tool của MCP).
-- Node **quá lớn**: có thể truncate output → audit có nguy cơ sót chi tiết dù đã tách `get_metadata` + gọi từng phần.
-- **Một trạng thái tĩnh**: screenshot/context phản ánh thiết kế tại thời điểm đó; **hover, focus, animation, chuyển cảnh** không được “chạy” như prototype trừ khi có frame/variant riêng cho từng state.
-- **Prototype** (nhánh, điều kiện, overlay) không được mô phỏng end-to-end như trên thiết bị thật; phân tích luồng dựa trên liên kết màn hình và mô tả, có thể thiếu rẽ nhánh thực tế.
+- Không có quyền đọc file/token không khớp scope → không audit được; báo lỗi và nhắc kiểm tra quyền.
+- File **Figma Make** không khớp một số luồng đọc.
+- Node **quá lớn**: có thể truncate output → áp token guard ở P0.
+- **Một trạng thái tĩnh**: hover, focus, animation chỉ đánh giá được nếu có frame/variant riêng.
+- **Prototype** không được mô phỏng end-to-end như trên thiết bị thật.
 
 **Giới hạn nội dung & phương pháp**
 
-- **JTBD / user-story / hypothesis** nếu thiếu brief từ product: agent **suy luận** từ UI — có thể lệch nghiệp vụ; cần ghi rõ “suy luận” trong báo cáo.
-- **Hành vi người dùng thật** (phỏng vấn, quan sát, analytics) không có trong Figma; phần “tác động hành vi” là **lập luận từ heuristic + thiết kế**, không phải kết quả nghiên cứu thực địa.
-- **Accessibility (WCAG)**: đánh giá dựa trên quy tắc và giá trị từ design context/screenshot, **không** thay thế audit trên bản build với công cụ a11y (`axe`, VoiceOver, v.v.).
+- **JTBD / user-story / hypothesis** nếu thiếu brief: agent **suy luận** từ UI — có thể lệch nghiệp vụ; ghi rõ "suy luận" trong báo cáo, trục UC confidence thấp.
+- **Hành vi người dùng thật** (phỏng vấn, quan sát, analytics) không có; phần "tác động hành vi" là **lập luận từ heuristic + thiết kế**, không phải nghiên cứu thực địa.
+- **Accessibility (WCAG)**: đánh giá dựa quy tắc + giá trị từ design context, **không** thay audit trên bản build với `axe`, VoiceOver.
+- **Items `out_of_scope`** (UI-12, UX-01, UX-03, UX-04): không đo được trên design tĩnh — đưa vào "Khuyến nghị test sau bàn giao".
 
 **Việc skill không cam kết**
 
-- Không thay thế **review thiết kế bởi design lead/PM** trước bàn giao.
+- Không thay review bởi design lead/PM trước bàn giao.
 - Không xác minh **đúng nghiệp vụ** (chỉ kiểm tra mức phù hợp với giả định đã cho).
 - Không đảm bảo **bản lập trình** trùng Figma 1:1.
-- Không tự quét toàn bộ tệp Figma với hàng nghìn màn mà không giới hạn phạm vi (node/flow).
-- **Copy pháp lý / thương hiệu / compliance** đầy đủ: chỉ khi user cung cấp guideline hoặc yêu cầu rõ trong prompt.
-
-Khi một trong các giới hạn trên áp dụng, agent nên **nói thẳng** trong phần tổng quan hoặc ghi chú cuối báo cáo (ví dụ: thiếu variant trạng thái, JTBD suy luận, prototype chưa xem trên thiết bị).
+- Không tự quét toàn bộ tệp Figma với hàng nghìn màn mà không giới hạn phạm vi.
+- **Copy pháp lý / thương hiệu / compliance** đầy đủ: chỉ khi user cung cấp guideline.
 
 ## Reference Files
 
-- Quy tắc gate bàn giao: [gate-rules.md](gate-rules.md)
+- Quy tắc gate + công thức: [gate-rules.md](gate-rules.md)
+- Checklist 4 trục: [checklist.md](checklist.md)
 - Bộ tiêu chuẩn heuristic: [heuristics.md](heuristics.md)
 - JTBD framework cho audit: [jtbd-framework.md](jtbd-framework.md)
-- Checklist hand-off readiness: [checklist.md](checklist.md)
 - Template báo cáo: [report-template.md](report-template.md)
 - Hướng dẫn xuất HTML: [html-template.md](html-template.md)
+- Phạm vi & tham chiếu: [PHAM-VI-TIEU-CHI-VA-THAM-CHIEU.md](PHAM-VI-TIEU-CHI-VA-THAM-CHIEU.md)

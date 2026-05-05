@@ -41,12 +41,14 @@ Agent không pad báo cáo. Finding nào không gắn được với user story 
 
 ### 2. Đánh giá theo 4 trục độc lập
 
-| Trục | Đánh giá | Item check |
-|------|----------|-----------|
-| **UI** (Craft) | Token, type scale, spacing, contrast, icon, state coverage, auto-layout | 12 |
-| **UX** (Usability) | Nielsen heuristics, hierarchy, flow, feedback, error prevention, navigation | 12 |
-| **Nghiệp vụ** (Business Logic) | Happy/unhappy path, edge case, role/permission, data state, validation, trust signal | 10 |
-| **Use-case** (JTBD Coverage) | User story coverage, AC testable, outcome metrics, không US/UI orphan | 8 |
+| Trục | Đánh giá | Items active | Out_of_scope |
+|------|----------|-------------|--------------|
+| **UI** (Craft) | Token, type scale, spacing, contrast, icon, state coverage, auto-layout | 11 | 1 (zoom 200%) |
+| **UX** (Usability) | Nielsen heuristics, hierarchy, flow, feedback, error prevention, navigation | 9 | 3 (first-glance, attention, timing) |
+| **Nghiệp vụ** (Business Logic) | Happy/unhappy path, edge case, role/permission, data state, validation, trust signal | 10 | 0 |
+| **Use-case** (JTBD Coverage) | User story coverage, AC testable, outcome metrics, không US/UI orphan | 8 | 0 |
+
+Mỗi item gắn nhãn **Method**: `measured` (đo trực tiếp từ Figma data) / `inferred` (agent judgment, có sai số ±10–15%) / `out_of_scope` (không đo được trên design tĩnh, chuyển vào "Khuyến nghị test sau bàn giao"). Báo cáo minh bạch tỷ lệ measured/inferred cho mỗi trục — không giả vờ tất cả đều đo được.
 
 Nguồn tham chiếu: **Apple HIG**, **Material Design**, **Nielsen 10 Heuristics**, **WCAG 2.2 AA**, **Baymard research**, **Laws of UX**.
 
@@ -103,14 +105,23 @@ Validation cuối cùng: 100% finding 🔴/🟡 phải có ảnh trước khi co
 ### 7. Phased execution kỷ luật token
 
 ```
-P0 Triage + Framing  (~1.5K tokens) — fetch Figma 1 lần, derive JTBD/US/Hypothesis
-P1 Load KB targeted  (~2K tokens)   — chỉ load section của lens cần chạy
-P2 Run 4 lenses      (~1.5K/lens)   — compressed finding vào scratchpad
-P3 Compute Gate      (~4K tokens)   — tính %, ra decision, expand prose
-P4 Apply fix         (~1K/edit)     — chỉ khi user xác nhận COOK NOW
+P0 Triage + Framing  (~1.5–3K tokens) — fetch Figma 1 lần, derive JTBD/US/Hypothesis
+P1 Load KB targeted  (~1.5–2K tokens) — chỉ load section của lens cần chạy
+P2 Run 4 lenses      (~1.5–3K/lens)   — compressed finding vào scratchpad
+P3 Compute Gate      (~3–5K tokens)   — tính %, ra decision, expand prose
+P4 Apply fix         (~1K/edit)       — chỉ khi user xác nhận COOK NOW
 ```
 
-Tổng mục tiêu: **12–18K token / 1 màn**. Naive review hết 50–80K — chênh lệch là nhờ scratchpad pattern.
+Tổng token thực tế theo scope:
+
+| Scope | Token budget |
+|-------|--------------|
+| Component đơn lẻ | 10–20K |
+| 1 màn trung bình (≤50 nodes) | 20–40K |
+| 1 màn phức tạp (>50 nodes, có biến/component lồng) | 40–70K |
+| Luồng 3–5 màn | 80–150K — đề xuất chia phiên 1 màn / session |
+
+Naive review không phased có thể vượt 100K cho 1 màn — chênh lệch là kỷ luật phase + scratchpad. Agent có **Token guard** ở P0: nếu node count >80 hoặc `get_design_context` truncate, agent cảnh báo và đề xuất chia subtree thay vì cố gắng nuốt cả file.
 
 ### 8. Resumability — review bị ngắt vẫn tiếp được
 
@@ -248,7 +259,7 @@ Khi giới hạn áp dụng, agent ghi rõ trong phần ghi chú cuối báo cá
 | Step UX Emotion đoán cảm xúc | Bỏ — không đo được trên design tĩnh |
 | Hypothesis có thể chung chung | Hypothesis BẮT BUỘC trích nguồn (Baymard / Nielsen / WCAG / cognitive law) |
 | Ảnh chụp dễ bị quên | Schema bắt buộc `[img:F-XXX]` + validation P3 |
-| Token cao 50–80K / màn | Mục tiêu 12–18K nhờ scratchpad |
+| Token cao 50–80K / màn không kiểm soát | Phased execution + token guard, chia chunk khi vượt ngưỡng |
 | Không resume được | Resume từ scratchpad |
 | Không chống "điểm cao gian lận" | Severity Gate: P0 mở > 0 = BLOCKED bất kể điểm |
 
